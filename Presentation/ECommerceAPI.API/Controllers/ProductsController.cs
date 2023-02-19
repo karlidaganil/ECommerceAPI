@@ -19,23 +19,18 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetProducts()
+    public async Task GetProducts()
     {
-        await _productWriteRepository.AddRangeAsync(new()
-        {
-            new() { Id = Guid.NewGuid(), Name = "Product 1", Price = 100, Stock = 10, CreatedDate = DateTime.Now, },
-            new() { Id = Guid.NewGuid(), Name = "Product 2", Price = 200, Stock = 10, CreatedDate = DateTime.Now, },
-            new() { Id = Guid.NewGuid(), Name = "Product 3", Price = 300, Stock = 10, CreatedDate = DateTime.Now, },
-            new() { Id = Guid.NewGuid(), Name = "Product 4", Price = 400, Stock = 10, CreatedDate = DateTime.Now, }
-        });
+        Product p = await _productReadRepository.GetByIdAsync("043FFD31-70B5-45F1-A33A-1623B84C6330");
+        p.Name = "Ha şöyle";
         await _productWriteRepository.SaveAsync();
-        return Ok();
     }
 
     [HttpGet("{id}")]
     public async Task<ActionResult<Product>> GetById(string id)
     {
-        var test = await _productReadRepository.GetByIdAsync(id);
-        return Ok(test);
+        // var test = await _productReadRepository.GetByIdAsync(id);
+        // return Ok(test);
+        return Ok();
     }
 }
