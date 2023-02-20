@@ -8,4 +8,5 @@ public class Order : BaseEntity
     public string Adress { get; set; }
     public ICollection<Product> Products { get; set; }
     public Customer Customer { get; set; }
+    public Guid CustomerId { get; set; }
 }

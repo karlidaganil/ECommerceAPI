@@ -11,26 +11,28 @@ public class ProductsController : ControllerBase
     private readonly IProductReadRepository _productReadRepository;
     private readonly IProductWriteRepository _productWriteRepository;
 
+    private readonly IOrderWriteRepository _orderWriteRepository;
+    private readonly IOrderReadRepository _orderReadRepository;
+
+    private readonly ICustomerWriteRepository _customerWriteRepository;
+
     public ProductsController(IProductReadRepository productReadRepository,
-        IProductWriteRepository productWriteRepository)
+        IProductWriteRepository productWriteRepository, IOrderWriteRepository orderWriteRepository,
+        ICustomerWriteRepository customerWriteRepository, IOrderReadRepository orderReadRepository)
     {
         _productReadRepository = productReadRepository;
         _productWriteRepository = productWriteRepository;
+        _orderWriteRepository = orderWriteRepository;
+        _customerWriteRepository = customerWriteRepository;
+        _orderReadRepository = orderReadRepository;
     }
 
     [HttpGet]
-    public async Task GetProducts()
+    public async Task Get()
     {
-        Product p = await _productReadRepository.GetByIdAsync("043FFD31-70B5-45F1-A33A-1623B84C6330");
-        p.Name = "Ha şöyle";
-        await _productWriteRepository.SaveAsync();
-    }
+        var order = await _orderReadRepository.GetByIdAsync("0783EB3C-1B89-4BD2-7D7B-08DB136C87E3");
+        order.Adress = "İstanbul";
 
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Product>> GetById(string id)
-    {
-        // var test = await _productReadRepository.GetByIdAsync(id);
-        // return Ok(test);
-        return Ok();
+        await _orderWriteRepository.SaveAsync();
     }
 }
