@@ -4,6 +4,7 @@ using ECommerceAPI.Application.ViewModels.Products;
 using ECommerceAPI.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
+using ECommerceAPI.Application.RequestParameters;
 using Microsoft.AspNetCore.Hosting;
 
 namespace ECommerceAPI.API.Controllers;
@@ -14,26 +15,45 @@ public class ProductsController : ControllerBase
 {
     private readonly IProductReadRepository _productReadRepository;
     private readonly IProductWriteRepository _productWriteRepository;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
 
     public ProductsController(IProductReadRepository productReadRepository,
         IProductWriteRepository productWriteRepository, IOrderWriteRepository orderWriteRepository,
-        ICustomerWriteRepository customerWriteRepository, IOrderReadRepository orderReadRepository)
+        ICustomerWriteRepository customerWriteRepository, IOrderReadRepository orderReadRepository,
+        IWebHostEnvironment webHostEnvironment)
     {
         _productReadRepository = productReadRepository;
         _productWriteRepository = productWriteRepository;
+        _webHostEnvironment = webHostEnvironment;
     }
-    
+
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get([FromQuery] Pagination pagination)
     {
-        return Ok(_productReadRepository.GetAll(false));
+        var totalCount = _productReadRepository.GetAll(false).Count();
+        var products = _productReadRepository.GetAll(false)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Stock,
+                p.Price,
+                p.CreatedDate,
+                p.UpdatedDate
+            }).Skip(pagination.Page * pagination.Size).Take(pagination.Size).ToList();
+
+        return Ok(new
+        {
+            totalCount,
+            products
+        });
     }
-    
+
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(string id)
     {
-        return Ok(await _productReadRepository.GetByIdAsync(id,false));
+        return Ok(await _productReadRepository.GetByIdAsync(id, false));
     }
 
     [HttpPost]
@@ -41,8 +61,8 @@ public class ProductsController : ControllerBase
     {
         if (ModelState.IsValid)
         {
-            
         }
+
         await _productWriteRepository.AddAsync(new Product()
         {
             Name = model.Name,
@@ -56,7 +76,7 @@ public class ProductsController : ControllerBase
     [HttpPut]
     public async Task<IActionResult> Put(VM_Update_Product model)
     {
-        Product product= await _productReadRepository.GetByIdAsync(model.Id);
+        Product product = await _productReadRepository.GetByIdAsync(model.Id);
         product.Name = model.Name;
         product.Stock = model.Stock;
         product.Price = model.Price;
@@ -69,6 +89,27 @@ public class ProductsController : ControllerBase
     {
         await _productWriteRepository.RemoveAsync(id);
         await _productWriteRepository.SaveAsync();
+        return Ok();
+    }
+
+    [HttpPost("[action]")]
+    public async Task<IActionResult> Upload(IFormFile file)
+    {
+        string uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "resource/product-image");
+
+        if (!Directory.Exists(uploadPath))
+        {
+            Directory.CreateDirectory(uploadPath);
+        }
+
+        Random r = new();
+        string fullPath = Path.Combine(uploadPath, $"{r.Next()}{Path.GetExtension(file.FileName)}");
+
+        using FileStream fileStream = new(fullPath, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024,
+            useAsync: false);
+        await file.CopyToAsync(fileStream);
+        await fileStream.FlushAsync();
+        
         return Ok();
     }
 }
