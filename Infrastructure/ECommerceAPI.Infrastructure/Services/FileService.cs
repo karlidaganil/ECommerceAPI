@@ -25,7 +25,7 @@ public class FileService : IFileService
         {
             FileStream fileStream = new(path, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024,
                 useAsync: false);
-            await fileStream.CopyToAsync(fileStream);
+            await file.CopyToAsync(fileStream);
             await fileStream.FlushAsync();
             return true;
         }
