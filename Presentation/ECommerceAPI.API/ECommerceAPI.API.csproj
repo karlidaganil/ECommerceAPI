@@ -25,4 +25,9 @@
       <Folder Include="wwwroot\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\resource\product-image\1086406292.jpg" />
+      <_ContentIncludedByDefault Remove="wwwroot\resource\product-image\467885951.jpg" />
+    </ItemGroup>
+
 </Project>

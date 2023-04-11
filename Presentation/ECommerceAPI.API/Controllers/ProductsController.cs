@@ -5,6 +5,7 @@ using ECommerceAPI.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System.IO;
 using ECommerceAPI.Application.RequestParameters;
+using ECommerceAPI.Application.Services;
 using Microsoft.AspNetCore.Hosting;
 
 namespace ECommerceAPI.API.Controllers;
@@ -16,16 +17,18 @@ public class ProductsController : ControllerBase
     private readonly IProductReadRepository _productReadRepository;
     private readonly IProductWriteRepository _productWriteRepository;
     private readonly IWebHostEnvironment _webHostEnvironment;
+    private readonly IFileService _fileService;
 
 
     public ProductsController(IProductReadRepository productReadRepository,
         IProductWriteRepository productWriteRepository, IOrderWriteRepository orderWriteRepository,
         ICustomerWriteRepository customerWriteRepository, IOrderReadRepository orderReadRepository,
-        IWebHostEnvironment webHostEnvironment)
+        IWebHostEnvironment webHostEnvironment, IFileService fileService)
     {
         _productReadRepository = productReadRepository;
         _productWriteRepository = productWriteRepository;
         _webHostEnvironment = webHostEnvironment;
+        _fileService = fileService;
     }
 
     [HttpGet]
@@ -95,21 +98,7 @@ public class ProductsController : ControllerBase
     [HttpPost("[action]")]
     public async Task<IActionResult> Upload(IFormFile file)
     {
-        string uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "resource/product-image");
-
-        if (!Directory.Exists(uploadPath))
-        {
-            Directory.CreateDirectory(uploadPath);
-        }
-
-        Random r = new();
-        string fullPath = Path.Combine(uploadPath, $"{r.Next()}{Path.GetExtension(file.FileName)}");
-
-        using FileStream fileStream = new(fullPath, FileMode.Create, FileAccess.Write, FileShare.None, 1024 * 1024,
-            useAsync: false);
-        await file.CopyToAsync(fileStream);
-        await fileStream.FlushAsync();
-        
+        _fileService.UplaodAsync("resource/product-images", file);
         return Ok();
     }
 }
